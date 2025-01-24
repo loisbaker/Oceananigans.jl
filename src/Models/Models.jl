@@ -7,6 +7,7 @@ export
     ExplicitFreeSurface, ImplicitFreeSurface, SplitExplicitFreeSurface,
     PrescribedVelocityFields, PressureField,
     LagrangianParticles,
+    LagrangianFiltering,
     seawater_density
 
 using Oceananigans: AbstractModel, fields, prognostic_fields
@@ -99,6 +100,7 @@ include("NonhydrostaticModels/NonhydrostaticModels.jl")
 include("HydrostaticFreeSurfaceModels/HydrostaticFreeSurfaceModels.jl")
 include("ShallowWaterModels/ShallowWaterModels.jl")
 include("LagrangianParticleTracking/LagrangianParticleTracking.jl")
+include("LagrangianFiltering/LagrangianFiltering.jl")
 
 using .NonhydrostaticModels: NonhydrostaticModel, PressureField
 
@@ -111,9 +113,12 @@ using .ShallowWaterModels: ShallowWaterModel, ConservativeFormulation, VectorInv
 
 using .LagrangianParticleTracking: LagrangianParticles
 
+using .LagrangianFiltering: LagrangianFilter
+
 const OceananigansModels = Union{HydrostaticFreeSurfaceModel,
                                  NonhydrostaticModel,
-                                 ShallowWaterModel}
+                                 ShallowWaterModel,
+                                 LagrangianFilter}
 
 """
     possible_field_time_series(model::HydrostaticFreeSurfaceModel)
