@@ -58,19 +58,21 @@ function create_tracers(;N=1)
     return (gC...,gS...)
 end
 
-function set_forcing_params(;N=1,freq_c=1)
+
+function set_forcing_params(;N=1,freq_c=1) # Try not having arrays as params
     #TODO add N=0 case 
     N_coeffs = 2^(N-1)
-    a = Array{Float64}(undef,N_coeffs)
-    b = Array{Float64}(undef,N_coeffs)
-    c = Array{Float64}(undef,N_coeffs)
-    d = Array{Float64}(undef,N_coeffs)
+    forcing_params = NamedTuple()
     for i in 1:N_coeffs
-        a[i] = (freq_c/2^N)*sin(pi/(2^(N+1))*(2*i-1))
-        b[i] = (freq_c/2^N)*cos(pi/(2^(N+1))*(2*i-1))
-        c[i] = freq_c*sin(pi/(2^(N+1))*(2*i-1))
-        d[i] = freq_c*cos(pi/(2^(N+1))*(2*i-1))
+        
+        a = (freq_c/2^N)*sin(pi/(2^(N+1))*(2*i-1))
+        b = (freq_c/2^N)*cos(pi/(2^(N+1))*(2*i-1))
+        c = freq_c*sin(pi/(2^(N+1))*(2*i-1))
+        d = freq_c*cos(pi/(2^(N+1))*(2*i-1))
+
+        temp_params = NamedTuple{(Symbol("a$i"), Symbol("b$i"),Symbol("c$i"),Symbol("d$i"))}([a,b,c,d])
+        forcing_params = merge(forcing_params,temp_params)
     end
-    forcing_params = (a=a,b=b,c=c,d=d)
+    
     return forcing_params
 end
