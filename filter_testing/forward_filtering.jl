@@ -1,7 +1,7 @@
 
 using Oceananigans
 using Oceananigans.Models: LagrangianFilter
-using Oceananigans.Models.LagrangianFiltering: set_times_on_disk!, create_tracers, set_forcing_params
+using Oceananigans.Models.LagrangianFiltering: set_times_on_disk!, create_tracers, set_forcing_params, create_forcing
 using Printf
 using Oceananigans.Units: Time
 
@@ -19,45 +19,9 @@ grid = u_t.grid
 
 forcing_params = set_forcing_params(N=N,freq_c=2)
 
-tracers= create_tracers(N=N)
+tracers= create_tracers(forcing_params)
 
-
-function make_gC_forcing_func(i)
-    c_index = (i-1)*4 + 3
-    d_index = (i-1)*4 + 4
-    # Return a new function 
-    return (x,y,t,gC,gS,p) -> -p[c_index]*gC - p[d_index]*gS
-end
-
-function make_gS_forcing_func(i)
-    c_index = (i-1)*4 + 3
-    d_index = (i-1)*4 + 4
-    # Return a new function 
-    return (x,y,t,gC,gS,p) -> -p[c_index]*gS + p[d_index]*gC  
-end
-
-scalar_forcing = ω_t
-
-# Initialize dictionary
-gCdict = Dict()
-gSdict = Dict()
-
-for i in 1:N
-    
-    gCkey = Symbol("gC$i")   # Dynamically create a Symbol for the key
-    gSkey = Symbol("gS$i")   # Dynamically create a Symbol for the key
-
-    # Store in dictionary
-    gC_forcing_i = Forcing(make_gC_forcing_func(i), parameters =forcing_params, field_dependencies = (gCkey,gSkey))
-    gCdict[gCkey] = (scalar_forcing,gC_forcing_i)
-
-    gS_forcing_i = Forcing(make_gS_forcing_func(i), parameters =forcing_params, field_dependencies = (gCkey,gSkey))
-    gSdict[gSkey] = gS_forcing_i
-    
-end
-
-forcing = (; NamedTuple(gSdict)..., NamedTuple(gCdict)...)
-
+forcing = create_forcing(ω_t, forcing_params)
 
 # Define model 
 model = LagrangianFilter(;grid, tracers= tracers, forcing=forcing)
