@@ -93,7 +93,7 @@ set!(model, uh = ū̄h, h = h̄)
 uh, vh, h = model.solution
 
 ## Build velocities
-u = uh / h
+u = uh / h # This is okay for Fields, but not arrays. Need a dot for elementwise
 v = vh / h
 
 ## Build and compute mean vorticity discretely

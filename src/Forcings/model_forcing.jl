@@ -18,6 +18,7 @@ regularize_forcing(forcing, field, field_name, model_field_names) = forcing # fa
 
 Wrap `forcing` in a `ContinuousForcing` at the location of `field`.
 """
+# This turns a forcing function into a continuous forcing, then later in continuous_forcing.jl it's regularized into a discrete forcing
 function regularize_forcing(forcing::Function, field, field_name, model_field_names)
     LX, LY, LZ = location(field)
     return ContinuousForcing{LX, LY, LZ}(forcing)
@@ -26,6 +27,7 @@ end
 regularize_forcing(::Nothing, field::AbstractField, field_name, model_field_names) = zeroforcing
 
 # TODO: some checking that `array` is validly-sized could be done here
+# Looks like regularize_forcing doesn't have to do anything to array or field time series inputs, they're already arrays not functions
 regularize_forcing(array::AbstractArray, field::AbstractField, field_name, model_field_names) = Forcing(array)
 regularize_forcing(fts::FlavorOfFTS, field::AbstractField, field_name, model_field_names) = Forcing(fts)
 

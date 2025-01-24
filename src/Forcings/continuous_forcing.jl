@@ -116,6 +116,7 @@ Regularize `forcing::ContinuousForcing` by determining the indices of `forcing.f
 in `model_field_names`, and associated interpolation functions so `forcing` can be used during
 time-stepping `NonhydrostaticModel`.
 """
+
 function regularize_forcing(forcing::ContinuousForcing, field, field_name, model_field_names)
 
     LX, LY, LZ = location(field)

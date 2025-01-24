@@ -2,24 +2,23 @@ using Oceananigans
 using Oceananigans.Operators
 using Oceananigans.OutputReaders
 using Oceananigans.OutputReaders: OnDisk
+using Oceananigans.OutputReaders: GPUAdaptedFieldTimeSeries
 using Oceananigans.Units
 using Oceananigans.Utils: Time 
 using Printf
+using Oceananigans.Architectures: on_architecture
 using CairoMakie
 
-include("generate_input_data.jl")
+include("generate_forcing_data.jl")
 
 #####
 ##### Periodic channel with time-dependent surface boundary fluxes 
 #####
 
-# Remember we've hacked the source code in solution_and_tracer_tendencies.jl to give us modified shallow water
-# Simulation parameters
-
 stop_time = 365days
 forcing_frequency = 1day
 
-arch = CPU()
+arch = GPU()
 
 # Defining the grid 
 grid = LatitudeLongitudeGrid(arch;
@@ -31,26 +30,30 @@ grid = LatitudeLongitudeGrid(arch;
                                 z = (-1000, 0))
 
 #####
-##### Generate Input Data
+##### Generate Forcing Data
 #####
 
 # Create a time series of atmospheric data with timestep 1 day
 # running for 1 year. (This step is not necessary if the input file is already available)
 times = range(0, stop_time, step = forcing_frequency)
-boundary_file = "boundary_data.jld2"
+forcing_file = "forcing_data.jld2"
 
-#generate_input_data!(grid, times, boundary_file)
+# T_forcing_tmp = Field((Center, Center, Center), grid) 
+# T_forcing = FieldTimeSeries{Center, Center, Center}(grid, times; backend = OnDisk(), path = forcing_file, name = "T_forcing")
 
-#####
-##### Define Boundary Conditions
-#####
+# for (t, time) in enumerate(T_forcing.times)
+#     @info "writing down data for timestep $t and time $time"
+#     set!(T_forcing_tmp, (x, y, z) -> sin(π * x) * time )
+#     set!(T_forcing,T_forcing_tmp,t)
+# end
 
-# We load in memory only 10 time steps at a time (this doesn't work)
-Qˢ = FieldTimeSeries(boundary_file, "Qˢ"; backend = OnDisk(),time_indexing=Clamp())
-τₓ = FieldTimeSeries(boundary_file, "τˣ"; backend = OnDisk(),time_indexing=Clamp())
+generate_forcing_data!(grid, times, forcing_file)
 
-T_top_bc = FluxBoundaryCondition(Qˢ) 
-u_top_bc = FluxBoundaryCondition(τₓ)
+
+T_forcing = FieldTimeSeries(forcing_file, "T_forcing"; backend = InMemory(2))
+T_top_bc = FluxBoundaryCondition(0) 
+u_top_bc = FluxBoundaryCondition(0)
+
 
 T_bcs = FieldBoundaryConditions(top = T_top_bc)
 u_bcs = FieldBoundaryConditions(top = u_top_bc)
@@ -85,6 +88,7 @@ model = HydrostaticFreeSurfaceModel(;
                                      momentum_advection,
                                      tracer_advection,
                                      tracers = :T,
+                                     forcing = (;T=T_forcing),
                                      free_surface, buoyancy, coriolis, closure,
                                      boundary_conditions = (T = T_bcs, u = u_bcs))
 
@@ -125,14 +129,14 @@ run!(simulation)
 # ##### Visualize the simulation!!
 # #####
 
-# T_series = FieldTimeSeries(output_file, "T")
-# u_series = FieldTimeSeries(output_file, "u")
-# v_series = FieldTimeSeries(output_file, "v")
+# # T_series = FieldTimeSeries(output_file, "T")
+# # u_series = FieldTimeSeries(output_file, "u")
+# # v_series = FieldTimeSeries(output_file, "v")
 
-# iter = Observable(1)
+# # iter = Observable(1)
 
-# Tt = @lift(interior(T_series[$iter], :, :, 10))
-# ut = @lift(interior(u_series[$iter], :, :, 10))
+# # Tt = @lift(interior(T_series[$iter], :, :, 10))
+# # ut = @lift(interior(u_series[$iter], :, :, 10))
 # # vt = @lift(interior(v_series[$iter], :, :, 10))
 
 # # fig = Figure()

@@ -53,8 +53,6 @@ function AdvectiveForcing(; u=ZeroField(), v=ZeroField(), w=ZeroField())
     return AdvectiveForcing(u, v, w)
 end
 
-
-# What does this bit do - uses indices, maybe the bit we want?
 @inline (af::AdvectiveForcing)(i, j, k, grid, clock, model_fields) = 0
 
 Base.summary(::AdvectiveForcing) = string("AdvectiveForcing")
@@ -76,14 +74,12 @@ on_architecture(to, af::AdvectiveForcing) =
 
 @inline velocities(forcing::AdvectiveForcing) = (u=forcing.u, v=forcing.v, w=forcing.w)
 
-# fallback - this just gives original velocities if forcing is not an advective forcing
+# fallback
 @inline with_advective_forcing(forcing, total_velocities) = total_velocities
 
-# This sums the velocities if the forcing is an advective forcing
 @inline with_advective_forcing(forcing::AdvectiveForcing, total_velocities) = 
     sum_of_velocities(velocities(forcing), total_velocities)
 
-# The next three are used when there are multiple forcings (which may be advective) to unwrap the tuple in a recursive way.
 # Unwrap the tuple within MultipleForcings
 @inline with_advective_forcing(mf::MultipleForcings, total_velocities) =
     with_advective_forcing(mf.forcings, total_velocities)

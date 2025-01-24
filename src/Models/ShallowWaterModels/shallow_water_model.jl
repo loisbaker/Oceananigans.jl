@@ -126,7 +126,7 @@ function ShallowWaterModel(;
                  timestepper::Symbol = :RungeKutta3,
                          formulation = ConservativeFormulation())
 
-    @warn "The ShallowWaterModel is currently unvalidated, subject to change, and should not be used for scientific research without adequate validation."
+    @warn "This is MODIFIED shallow water! The ShallowWaterModel is currently unvalidated, subject to change, and should not be used for scientific research without adequate validation."
 
     arch = architecture(grid)
 

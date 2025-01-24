@@ -42,3 +42,30 @@ end
 @inline div_Uc(i, j, k, grid, ::Nothing, ::ZeroU, c) = zero(grid)
 @inline div_Uc(i, j, k, grid, ::Nothing, U, ::ZeroField) = zero(grid)
 @inline div_Uc(i, j, k, grid, ::Nothing, ::ZeroU, ::ZeroField) = zero(grid)
+
+# """
+#     c_div_U(i, j, k, grid, advection, U, c)
+
+# Calculate the tracer multiplied by divergence of the velocity field, incase velocity is non-divergent (for example,
+# when using PrescribedVelocities) ``c𝛁⋅𝐯``,
+
+# ```
+# c[i, j, k] * divᶜᶜᶜ(U)
+# ```
+# which ends up at the location `ccc`.
+# """
+
+# # LB added: Try to implement an extra term incase velocity is non-divergent
+# @inline function c_div_U(i, j, k, grid, advection, U, c)
+#     return c[i, j, k] * divᶜᶜᶜ(i, j, k, grid, U.u, U.v, U.w)
+# end
+
+# # Fallbacks for zero velocities, zero tracer and `nothing` advection
+# @inline c_div_U(i, j, k, grid, advection, ::ZeroU, c) = zero(grid)
+# @inline c_div_U(i, j, k, grid, advection, U, ::ZeroField) = zero(grid)
+# @inline c_div_U(i, j, k, grid, advection, ::ZeroU, ::ZeroField) = zero(grid)
+
+# @inline c_div_U(i, j, k, grid, ::Nothing, U, c) = zero(grid)
+# @inline c_div_U(i, j, k, grid, ::Nothing, ::ZeroU, c) = zero(grid)
+# @inline c_div_U(i, j, k, grid, ::Nothing, U, ::ZeroField) = zero(grid)
+# @inline c_div_U(i, j, k, grid, ::Nothing, ::ZeroU, ::ZeroField) = zero(grid)

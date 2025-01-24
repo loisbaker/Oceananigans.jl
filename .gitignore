@@ -21,6 +21,7 @@ docs/Manifest.toml
 *.data
 *.nc
 *.jld2
+*.mat
 
 # Checkpointer model serialization
 *.jlser
