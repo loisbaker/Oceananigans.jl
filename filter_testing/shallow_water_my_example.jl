@@ -38,7 +38,8 @@ f = coriolis.f
 g = gravitational_acceleration
 
 # Get initial condition from mat file
-file = matopen("uvh_256_Fr_0_3_Ro_0_4_wave_0_5.mat")
+data_file = joinpath(@__DIR__, "uvh_256_Fr_0_3_Ro_0_4_wave_0_5.mat")
+file = matopen(data_file)
 u_i = read(file, "u") 
 v_i = read(file, "v")
 h_i = read(file, "h")
@@ -58,7 +59,7 @@ v = Field(vh / h)
 #dudt = Field(∂t(u))
 
 ## Running a simulation
-simulation = Simulation(model, Δt = 1e-3, stop_time = 20)
+simulation = Simulation(model, Δt = 1e-3, stop_time = 5)
 
 function progress(sim)
     model = sim.model
