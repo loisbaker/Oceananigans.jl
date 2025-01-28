@@ -55,11 +55,11 @@ set!(model, uh = uh_i, vh = vh_i, h= h_i )
 uh, vh, h = model.solution
 u = Field(uh / h) # This is fine when these things aren't arrays, otherwise need elementwise division
 v = Field(vh / h)
-ω = Field(∂x(v) - ∂y(u))
-#dudt = Field(∂t(u))
+ω = Field(@at (Center, Center, Center) ∂x(v) - ∂y(u)) # Output fields to filter at center locations
+
 
 ## Running a simulation
-simulation = Simulation(model, Δt = 1e-3, stop_time = 5)
+simulation = Simulation(model, Δt = 1e-3, stop_time = 20)
 
 function progress(sim)
     model = sim.model
