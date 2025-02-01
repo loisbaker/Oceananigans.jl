@@ -189,3 +189,5 @@ for i in 0:0.01:1
     println("Time = $i")
     println(u_t.backend)
 end
+ # So need to fix this and also how it goes for values where in memory would be out of range
+ # This might well fix things 
