@@ -24,12 +24,41 @@ function generate_forcing_data!(grid, times, filename)
 end
 
 arch = GPU()
-# grid = RectilinearGrid(arch, size=(2, 2, 2), extent=(1, 1, 1))
-# times = 0:0.1:3
+grid = RectilinearGrid(arch, size=(2, 2, 2), extent=(1, 1, 1))
+times = 0:0.1:3
 filename = joinpath(@__DIR__, "MWE_forcing_file.jld2")
 
 #generate_forcing_data!(grid, times, filename)
-N_in_memory = 5
-forcing_fts = FieldTimeSeries(filename, "forcing"; backend = InMemory())
+forcing_fts = FieldTimeSeries(filename, "forcing"; backend = InMemory(2))
+grid = forcing_fts.grid
 model = NonhydrostaticModel(; grid, tracers=(:c), forcing=(; c=forcing_fts))
 
+
+u = model.velocities.u
+v = model.velocities.v
+c = model.tracers.c
+
+# Running a `Simulation`
+simulation = Simulation(model, Δt = 1e-3, stop_time = 3) 
+
+function progress(sim)
+    @info @sprintf("Simulation time: %s, max(|u|, |v|, |c|): %.2e, %.2e, %.2e \n", 
+                   prettytime(sim.model.clock.time), 
+                   maximum(abs, u), maximum(abs, v),maximum(abs, c))
+   
+     return nothing
+ end
+
+simulation.callbacks[:progress] = Callback(progress, IterationInterval(100))
+
+
+output_filename = joinpath(@__DIR__, "MWE_test.nc")
+simulation.output_writers[:fields] = NetCDFOutputWriter(model, (; u,v,c),
+                                                        filename = output_filename,
+                                                        schedule = TimeInterval(0.05),
+                                                        overwrite_existing = true)
+
+
+# And finally run the simulation.
+
+run!(simulation)
