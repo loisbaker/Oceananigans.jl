@@ -254,6 +254,6 @@ function update_velocities!(sim, fts_velocities)
     model = sim.model
     time = sim.model.clock.time
     u_fts, v_fts = fts_velocities
-    set!(model, u=-u_fts[Time(time)], v= -v_fts[Time(time)])
+    set!(model, u=u_fts[Time(time)], v= v_fts[Time(time)])
     return nothing
 end
