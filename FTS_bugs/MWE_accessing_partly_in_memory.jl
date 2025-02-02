@@ -70,3 +70,6 @@ println("Here's our fts: $forcing_fts")
 
 # This might not be a problem if going forwards, as the final few will be in memory. Problem comes from requesting [28],
 # so it tries to load in 28,29,30,31,32 and 32 doesn't exist. Can load 27,28,29,30,31 though. 
+
+
+# With fix:

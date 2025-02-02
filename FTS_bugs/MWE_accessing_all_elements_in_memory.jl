@@ -9,6 +9,8 @@ using Oceananigans.OutputReaders
 using Oceananigans.OutputReaders: OnDisk
 using Oceananigans.Units
 using Oceananigans.Utils: Time 
+using Oceananigans.Fields: index_binary_search
+using Oceananigans.OutputReaders: interpolating_time_indices
 using Printf
 
 function generate_forcing_data!(grid, times, filename)
@@ -19,46 +21,33 @@ function generate_forcing_data!(grid, times, filename)
     for (it, time) in enumerate(forcing_FTS.times)
         @info "writing down data for timestep $it and time $time"
         set!(forcing_tmp, (x, y, z) -> sin(2* π * time) )
-        set!(forcing_FTS,forcing_tmp,it) #set!(fts::InMemoryFTS, value, n::Int) = set!(fts[n], value)
+        set!(forcing_FTS,forcing_tmp,it) 
     end
 end
 
 arch = GPU()
 grid = RectilinearGrid(arch, size=(2, 2, 2), extent=(1, 1, 1))
-times = 0:0.1:3
+times = 0:0.1:3.1
 filename = joinpath(@__DIR__, "MWE_forcing_file.jld2")
 
 #generate_forcing_data!(grid, times, filename)
-forcing_fts = FieldTimeSeries(filename, "forcing"; backend = InMemory(2))
-grid = forcing_fts.grid
-model = NonhydrostaticModel(; grid, tracers=(:c), forcing=(; c=forcing_fts))
+forcing_fts = FieldTimeSeries(filename, "forcing"; backend = InMemory(4))
+println(forcing_fts)
 
+for i in 0:0.01:3.2
+    println("")
+    println("Next")
+    println("Time = $i")
+    v = maximum(forcing_fts[Time(i)])
+    println(v)
+    
+    println(forcing_fts.backend)
+end
+# This generates weird results for backend InMemory(n)
 
-u = model.velocities.u
-v = model.velocities.v
-c = model.tracers.c
+# Let's just check that we don't error at the end of the interval because we're trying to load in too many indices 
+# We should actually try to fix this error (only load to the end of the dataset), as it's the cause of the other error too, but might not occur naturally. 
+# But we've fixed the weirdness hopefully by moving the order in field_tim_series indexing and going for the n2-1 index rather than the n2 so
+# that we can still interpolate the gap. 
 
-# Running a `Simulation`
-simulation = Simulation(model, Δt = 1e-3, stop_time = 3) 
-
-function progress(sim)
-    @info @sprintf("Simulation time: %s, max(|u|, |v|, |c|): %.2e, %.2e, %.2e \n", 
-                   prettytime(sim.model.clock.time), 
-                   maximum(abs, u), maximum(abs, v),maximum(abs, c))
-   
-     return nothing
- end
-
-simulation.callbacks[:progress] = Callback(progress, IterationInterval(100))
-
-
-output_filename = joinpath(@__DIR__, "MWE_test.nc")
-simulation.output_writers[:fields] = NetCDFOutputWriter(model, (; u,v,c),
-                                                        filename = output_filename,
-                                                        schedule = TimeInterval(0.05),
-                                                        overwrite_existing = true)
-
-
-# And finally run the simulation.
-
-run!(simulation)
+# Then check what's actually erroring in the update_velocities! in the perform_filtering 
