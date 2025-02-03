@@ -247,8 +247,8 @@ mutable struct FieldTimeSeries{LX, LY, LZ, TI, K, I, D, G, ET, B, χ, P, N, KW} 
 
         if times isa AbstractArray
             # Try to convert to a range, cuz
-            time_range = range(first(times), last(times), length=length(times))
-            if all(time_range .≈ times) # good enough for most
+            time_range = range(first(times), last(times), length=length(times)) 
+            if isapprox(time_range,times)
                 times = time_range
             end
 
