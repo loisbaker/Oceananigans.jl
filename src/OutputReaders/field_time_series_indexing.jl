@@ -143,8 +143,8 @@ function Base.getindex(fts::FieldTimeSeries, time_index::Time)
     end
 
     # Otherwise, make a Field representing a linear interpolation in time
-    ψ₁ = fts[n₁]
     ψ₂ = fts[n₂]
+    ψ₁ = fts[n₁]
     ψ̃ = Field(ψ₂ * ñ + ψ₁ * (1 - ñ))
 
     # Compute the field and return it
