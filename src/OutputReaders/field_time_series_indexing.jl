@@ -263,8 +263,9 @@ function update_field_time_series!(fts::PartlyInMemoryFTS, n₁::Int, n₂=n₁)
 
     if !in_range
         # Update backend
-        Nm = length(fts.backend)
-        start = n₁
+        Nt = length(fts.times)
+        start = ifelse(n₁>1,n₁-1,n₁)
+        Nm = ifelse(start + length(fts.backend) - 1 > Nt , Nt-start+1, length(fts.backend))
         fts.backend = new_backend(fts.backend, start, Nm)
         set!(fts)
     end
