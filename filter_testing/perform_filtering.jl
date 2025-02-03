@@ -22,9 +22,9 @@ N = 1 # Filter order
 T = set_data_on_disk!(fields_filename, direction="forward", T_start = T_start, T_end = T_end)
 
 # Load in the velocities. Need to work out the best backend. Ideally InMemory(2), but this has errors. AND it really messes up the field. We don't trust the partly in memory functionality, needs fixing
-u_t = FieldTimeSeries(fields_filename, "u"; architecture=arch, backend=InMemory(2))
-v_t = FieldTimeSeries(fields_filename, "v"; architecture=arch, backend=InMemory(2))
-ω_t = FieldTimeSeries(fields_filename, "ω"; architecture=arch, backend=InMemory(2))
+u_t = FieldTimeSeries(fields_filename, "u"; architecture=arch, backend=InMemory(4))
+v_t = FieldTimeSeries(fields_filename, "v"; architecture=arch, backend=InMemory(4))
+ω_t = FieldTimeSeries(fields_filename, "ω"; architecture=arch, backend=InMemory(4))
 
 grid = u_t.grid
 
@@ -41,19 +41,9 @@ u = model.velocities.u
 v = model.velocities.v
 ω = Field(@at (Center,Center,Center) ∂x(v) - ∂y(u))
 g_total = sum_tracers(model,forcing_params)
-gC1 = model.tracers.gC1
-gS1 = model.tracers.gS1
 
 # Running a `Simulation`
 simulation = Simulation(model, Δt = 1e-3, stop_time = T) 
-
-# function update_velocities!(sim)
-#     model = sim.model
-#     time = sim.model.clock.time
-#     # u_fts, v_fts = fts_velocities
-#     set!(model, u=u_t[Time(time)], v= v_t[Time(time)])
-#     return nothing
-# end
 
 simulation.callbacks[:update_velocities] = Callback(update_velocities!, parameters = (u_t, v_t))
 
@@ -86,35 +76,8 @@ println("Computation time: ", computation_time, " seconds")
 # Now, run it backwards. Switch the data direction on disk
 set_data_on_disk!(fields_filename, direction="backward", T_start=T_start, T_end = T_end);
 
-#Load in the velocities. Need to work out the best backend. 
-u_t = FieldTimeSeries(fields_filename, "u"; architecture=arch, backend=InMemory(2))
-v_t = FieldTimeSeries(fields_filename, "v"; architecture=arch, backend=InMemory(2))
-ω_t = FieldTimeSeries(fields_filename, "ω"; architecture=arch, backend=InMemory(2))
-
-tracers= create_tracers(forcing_params)
-
-forcing = create_forcing(ω_t, forcing_params)
-
-# Define model 
-model = LagrangianFilter(;grid, tracers= tracers, forcing=forcing)
-
-u = model.velocities.u
-v = model.velocities.v
-ω = Field(@at (Center,Center,Center) ∂x(v) - ∂y(u))
-g_total = sum_tracers(model,forcing_params)
-gC1 = model.tracers.gC1
-gS1 = model.tracers.gS1
-
-# Running a `Simulation`
-simulation = Simulation(model, Δt = 1e-3, stop_time = T) 
-
-simulation.callbacks[:update_velocities] = Callback(update_velocities!, parameters = (u_t, v_t))
-
-simulation.callbacks[:progress] = Callback(progress, IterationInterval(500))
-
-
-# # Reset time
-# #simulation.model.clock.time = 0
+# Reset time
+simulation.model.clock.time = 0
 
 output_filename = joinpath(@__DIR__, "backward_LF.nc")
 
