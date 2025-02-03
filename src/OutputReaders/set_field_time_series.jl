@@ -7,7 +7,7 @@ using Oceananigans.Architectures: cpu_architecture
 
 iterations_from_file(file) = parse.(Int, keys(file["timeseries/t"]))
 
-find_time_index(time::Number, file_times)       = findfirst(t -> t ≈ time, file_times)
+find_time_index(time::Number, file_times)       = findfirst(t -> (isapprox(t,time) || isapprox(t,time,atol=1e-14)), file_times)
 find_time_index(time::AbstractTime, file_times) = findfirst(t -> t == time, file_times)
 
 function set!(fts::InMemoryFTS, path::String=fts.path, name::String=fts.name; warn_missing_data=true)
