@@ -264,8 +264,9 @@ function update_field_time_series!(fts::PartlyInMemoryFTS, n₁::Int, n₂=n₁)
     in_range = n₁ ∈ idxs && n₂ ∈ idxs
     if !in_range
         # Update backend
-        Nm = length(fts.backend)
-        start = n₁-1 # LB changed from n₁ to n₁-1, to enable interpolation when time running forward
+        Nt = length(fts.times)
+        start = ifelse(n₁>1,n₁-1,n₁) # LB changed from n₁ to n₁-1, to enable interpolation when time running forward
+        Nm = ifelse(start + length(fts.backend) - 1 > Nt , Nt-start+1, length(fts.backend)) # LB changed to avoid out of bounds error
         fts.backend = new_backend(fts.backend, start, Nm) 
         set!(fts)
     end
