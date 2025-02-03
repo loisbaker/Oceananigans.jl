@@ -143,8 +143,9 @@ function Base.getindex(fts::FieldTimeSeries, time_index::Time)
     end
 
     # Otherwise, make a Field representing a linear interpolation in time
+    ψ₂ = fts[n₂] # If we do this one first, the data has to update first, not in the middle of this operation
     ψ₁ = fts[n₁]
-    ψ₂ = fts[n₂]
+    #ψ₂ = fts[n₂] # If we update what's in memory during the operation, the field doesn't get computed right
     ψ̃ = Field(ψ₂ * ñ + ψ₁ * (1 - ñ))
 
     # Compute the field and return it
@@ -249,7 +250,7 @@ end
 update_field_time_series!(fts, time::Time) = nothing
 update_field_time_series!(fts, n::Int) = nothing
 
-# Update the `fts` to contain the time `time_index.time`.
+# Update the `fts` to contain the time `time_index.time`. 
 # Linear extrapolation, simple version
 function update_field_time_series!(fts::PartlyInMemoryFTS, time_index::Time)
     t = time_index.time
@@ -257,26 +258,23 @@ function update_field_time_series!(fts::PartlyInMemoryFTS, time_index::Time)
     return update_field_time_series!(fts, n₁, n₂)
 end
 
+
 function update_field_time_series!(fts::PartlyInMemoryFTS, n₁::Int, n₂=n₁)
     idxs = time_indices(fts)
     in_range = n₁ ∈ idxs && n₂ ∈ idxs
-
     if !in_range
         # Update backend
         Nm = length(fts.backend)
-        start = n₁
-        fts.backend = new_backend(fts.backend, start, Nm)
+        start = n₁-1 # LB changed from n₁ to n₁-1, to enable interpolation when time running forward
+        fts.backend = new_backend(fts.backend, start, Nm) 
         set!(fts)
     end
 
     return nothing
 end
 
-# If `n` is not in memory, getindex automatically updates the data in memory
-# so that `n` is the first index available.
 function getindex(fts::InMemoryFTS, n::Int)
-    update_field_time_series!(fts, n)
-
+    update_field_time_series!(fts, n) 
     m = memory_index(fts, n)
     underlying_data = view(parent(fts), :, :, :, m)
     data = offset_data(underlying_data, fts.grid, location(fts), fts.indices)
