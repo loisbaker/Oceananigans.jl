@@ -1,58 +1,58 @@
-
 using Oceananigans
 using Oceananigans.Models: LagrangianFilter
-using Oceananigans.Models.LagrangianFiltering: set_data_on_disk!, create_tracers, set_forcing_params, create_forcing, sum_tracers, update_velocities!
-using Printf
+using Oceananigans.Models.LagrangianFiltering
 using Oceananigans.Units: Time
+using Printf
 
 fields_filename = joinpath(@__DIR__, "SW_vort.jld2")
 T_start = 0
 T_end = 10
 
-#TODO 
-# Output sensible filtered fields
-# Get FieldTimeSeries working correctly
-# Add xi maps
-# Add multiple tracer functionality
-
 arch = GPU()
 
-N = 1 # Filter order
+# Set filter order
+N = 2 
 
+# Manipulate data on disk to have correct order 
 T = set_data_on_disk!(fields_filename, direction="forward", T_start = T_start, T_end = T_end)
 
-# Load in the velocities. Need to work out the best backend. Ideally InMemory(2), but this has errors. AND it really messes up the field. We don't trust the partly in memory functionality, needs fixing
-u_t = FieldTimeSeries(fields_filename, "u"; architecture=arch, backend=InMemory(4))
-v_t = FieldTimeSeries(fields_filename, "v"; architecture=arch, backend=InMemory(4))
-ω_t = FieldTimeSeries(fields_filename, "ω"; architecture=arch, backend=InMemory(4))
+# Define tracers to filter
+filter_tracer_names = ("ω","u")
 
-grid = u_t.grid
+# Define velocities to use for filtering
+velocity_names = ("u","v")
 
-forcing_params = set_forcing_params(N=N,freq_c=2)
+# Load in saved data from simulation
+saved_velocities, saved_tracers, grid = load_data(fields_filename, filter_tracer_names, velocity_names = velocity_names, architecture=arch, backend=InMemory(4))
 
-tracers= create_tracers(forcing_params)
+# Set filtering parameters
+filter_params = set_filter_params(N=N,freq_c=2)
 
-forcing = create_forcing(ω_t, forcing_params)
+# Create all the tracers we'll need to solve for
+tracers = create_tracers(filter_tracer_names, velocity_names, filter_params)
+
+# Create forcing for these tracers
+forcing = create_forcing(tracers, saved_tracers, filter_tracer_names, velocity_names, filter_params)
 
 # Define model 
 model = LagrangianFilter(;grid, tracers= tracers, forcing=forcing)
 
+# Define some outputs
 u = model.velocities.u
 v = model.velocities.v
 ω = Field(@at (Center,Center,Center) ∂x(v) - ∂y(u))
-g_total = sum_tracers(model,forcing_params)
+filtered_outputs = create_output_fields(model, filter_tracer_names, velocity_names, filter_params)
 
-# Running a `Simulation`
+# Define the filtering simulation 
 simulation = Simulation(model, Δt = 1e-3, stop_time = T) 
 
-simulation.callbacks[:update_velocities] = Callback(update_velocities!, parameters = (u_t, v_t))
+simulation.callbacks[:update_velocities] = Callback(update_velocities!, parameters = saved_velocities)
 
 
 function progress(sim)
     @info @sprintf("Simulation time: %s, max(|u|, |v|), max(|g_total|), min(|g_total|): %.2e, %.2e, %.2e, %.2e \n", 
                    prettytime(sim.model.clock.time), 
                    maximum(abs, u), maximum(abs, v),minimum(abs, u),minimum(abs, v))             
-    println(u_t.backend)
      return nothing
  end
 
@@ -60,7 +60,7 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(50))
 
 
 output_filename = joinpath(@__DIR__, "forward_LF.nc")
-simulation.output_writers[:fields] = NetCDFOutputWriter(model, (; u,v,ω,g_total),
+simulation.output_writers[:fields] = NetCDFOutputWriter(model, filtered_outputs,
                                                         filename = output_filename,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)
@@ -81,7 +81,7 @@ simulation.model.clock.time = 0
 
 output_filename = joinpath(@__DIR__, "backward_LF.nc")
 
-simulation.output_writers[:fields] = NetCDFOutputWriter(model, (; g_total,ω),
+simulation.output_writers[:fields] = NetCDFOutputWriter(model, filtered_outputs,
                                                         filename = output_filename,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)

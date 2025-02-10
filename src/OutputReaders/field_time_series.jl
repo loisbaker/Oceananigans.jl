@@ -135,8 +135,8 @@ end
 Compute the time index of a snapshot currently stored at the memory index `m`,
 given `backend`, `time_indexing`, and number of times `Nt`.
 """
-@inline time_index(backend::PartlyInMemory, ::Union{Clamp, Linear}, Nt, m) =
-    reverse_index(m, backend.start)
+# @inline time_index(backend::PartlyInMemory, ::Union{Clamp, Linear}, Nt, m) =
+#     reverse_index(m, backend.start)
 
 """
     memory_index(backend::PartlyInMemory, time_indexing, Nt, n)

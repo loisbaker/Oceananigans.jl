@@ -20,7 +20,7 @@ import Oceananigans: fields, prognostic_fields
 import Oceananigans.Advection: cell_advection_timescale
 import Oceananigans.TimeSteppers: step_lagrangian_particles!
 
-export set_data_on_disk!, create_tracers, set_forcing_params
+export set_data_on_disk!, load_data, create_tracers, set_filter_params, create_forcing, update_velocities!, create_output_fields
 export c_div_U
 
 #####
