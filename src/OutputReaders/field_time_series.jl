@@ -123,9 +123,7 @@ struct Clamp end # clamp to nearest value
 @inline shift_index(n, n₀) = n - (n₀ - 1)
 @inline reverse_index(m, n₀) = m + n₀ - 1
 
-@inline memory_index(backend::PartlyInMemory, ::Linear, Nt, n) = shift_index(n, backend.start)
-
-@inline function memory_index(backend::PartlyInMemory, ::Clamp, Nt, n)
+@inline function memory_index(backend::PartlyInMemory, ::Union{Clamp, Linear}, Nt, n)
     n̂ = clamp(n, 1, Nt)
     m = shift_index(n̂, backend.start)
     return m
@@ -190,6 +188,12 @@ end
     return ñ
 end
 
+@inline function time_index(backend::PartlyInMemory, ::Union{Clamp, Linear}, Nt, m)
+    n = reverse_index(m, backend.start)
+    ñ = ifelse(n > Nt, Nt, n)
+    return ñ
+end
+
 """
     time_indices(backend, time_indexing, Nt)
 
@@ -247,10 +251,8 @@ mutable struct FieldTimeSeries{LX, LY, LZ, TI, K, I, D, G, ET, B, χ, P, N, KW} 
 
         if times isa AbstractArray
             # Try to convert to a range, cuz
-            time_range = range(first(times), last(times), length=length(times)) 
-
-            #if all(time_range .≈ times) # good enough for most BUT failing for values near zero.
-            if all(isapprox(time_range,times)) || all(isapprox(time_range,times,atol=1e-14))
+            time_range = range(first(times), last(times), length=length(times))
+            if isapprox(time_range,times)
                 times = time_range
             end
 
@@ -358,7 +360,7 @@ new_data(FT, grid, loc, indices, ::Nothing) = nothing
 # https://github.com/CliMA/ClimaOcean.jl/actions/runs/8804916198/job/24166354095)
 function new_data(FT, grid, loc, indices, Nt::Union{Int, Int64})
     space_size = total_size(grid, loc, indices)
-    underlying_data = zeros(FT, architecture(grid), space_size..., Nt)
+    underlying_data = zeros(architecture(grid), FT, space_size..., Nt)
     data = offset_data(underlying_data, grid, loc, indices)
     return data
 end
@@ -373,7 +375,7 @@ function FieldTimeSeries(loc, grid, times=();
                          backend = InMemory(),
                          path = nothing,
                          name = nothing,
-                         time_indexing = Linear(),
+                         time_indexing = Clamp(),
                          boundary_conditions = nothing,
                          reader_kw = NamedTuple())
 

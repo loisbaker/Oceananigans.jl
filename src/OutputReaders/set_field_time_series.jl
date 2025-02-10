@@ -7,7 +7,7 @@ using Oceananigans.Architectures: cpu_architecture
 
 iterations_from_file(file) = parse.(Int, keys(file["timeseries/t"]))
 
-find_time_index(time::Number, file_times)       = findfirst(t -> (isapprox(t,time) || isapprox(t,time,atol=1e-14)), file_times) # Had to edit this too
+find_time_index(time::Number, file_times)       = findfirst(t -> (isapprox(t,time) || isapprox(t,time,atol=1e-14)), file_times)
 find_time_index(time::AbstractTime, file_times) = findfirst(t -> t == time, file_times)
 
 function set!(fts::InMemoryFTS, path::String=fts.path, name::String=fts.name; warn_missing_data=true)
@@ -40,7 +40,7 @@ function set!(fts::InMemoryFTS, path::String=fts.path, name::String=fts.name; wa
                             architecture = cpu_architecture(arch),
                             indices = fts.indices,
                             boundary_conditions = fts.boundary_conditions)
-
+            
             # Potentially transfer from CPU to GPU
             set!(fts[n], field_n)
         end
