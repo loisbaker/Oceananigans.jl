@@ -1,5 +1,5 @@
 
-# Remember we've hacked the source code in solution_and_tracer_tendencies.jl to give us modified shallow water
+# Remember we've changed the source code in solution_and_tracer_tendencies.jl to give us modified shallow water
 
 using Oceananigans
 using Oceananigans.Models: ShallowWaterModel
@@ -9,16 +9,15 @@ using Printf
 # ## Two-dimensional domain 
 
 # The shallow water model is two-dimensional and uses grids that are `Flat`
-# in the vertical direction. We use length scales non-dimensionalized by the width
-# of the Bickley jet.
-
-grid = RectilinearGrid(GPU(),size = (256, 256),
+# in the vertical direction. 
+arch = GPU()
+grid = RectilinearGrid(arch,size = (256, 256),
                        x = (0, 2π),
                        y = (0, 2π),
                        topology = (Periodic, Periodic, Flat))
 
-# ## Building a `ShallowWaterModel`
-#
+# Building a `ShallowWaterModel`
+
 # We build a `ShallowWaterModel` with the `WENO` advection scheme,
 # 3rd-order Runge-Kutta time-stepping, non-dimensional Coriolis, and
 # gravitational acceleration
@@ -46,16 +45,16 @@ h_i = read(file, "h")
 close(file)
 
 
-uh_i = u_i.*h_i # dot is important for elementwise array multiplication!
+uh_i = u_i.*h_i 
 vh_i = v_i.*h_i
 
 set!(model, uh = uh_i, vh = vh_i, h= h_i )
 
 ## Build velocities and vorticity
 uh, vh, h = model.solution
-u = Field(uh / h) # This is fine when these things aren't arrays, otherwise need elementwise division
+u = Field(uh / h)
 v = Field(vh / h)
-ω = Field(@at (Center, Center, Center) ∂x(v) - ∂y(u)) # Output fields to filter at center locations
+ω = Field(@at (Center, Center, Center) ∂x(v) - ∂y(u)) # We should output fields to filter at center locations
 
 
 ## Running a simulation
@@ -75,11 +74,10 @@ end
 simulation.callbacks[:progress] = Callback(progress, IterationInterval(100))
 
 # Build the `output_writer` for the two-dimensional fields to be output.
-# Output every `t = 1.0`.
 
 fields_filename= joinpath(@__DIR__, "SW_vort")
 
-# We'll output both datasets, just because we have the movie working for the netcdf but want the jld2 for reading forcing
+# We'll output both jld2 and netcdf datasets
 simulation.output_writers[:fields_jld2] = JLD2OutputWriter(model, (; ω,u,v),
                                                         filename = fields_filename,
                                                         schedule = TimeInterval(0.1),

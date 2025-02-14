@@ -10,8 +10,10 @@ T_end = 10
 
 arch = GPU()
 
-# Set filter order
+# Set filter order and cut-off frequency
+# Amplitude of frequency response of filter will be squared Butterworth order 2^N
 N = 2 
+freq_c = 2
 
 # Manipulate data on disk to have correct order 
 T = set_data_on_disk!(fields_filename, direction="forward", T_start = T_start, T_end = T_end)
@@ -26,7 +28,7 @@ velocity_names = ("u","v")
 saved_velocities, saved_tracers, grid = load_data(fields_filename, filter_tracer_names, velocity_names = velocity_names, architecture=arch, backend=InMemory(4))
 
 # Set filtering parameters
-filter_params = set_filter_params(N=N,freq_c=2)
+filter_params = set_filter_params(N=N,freq_c=freq_c)
 
 # Create all the tracers we'll need to solve for
 tracers = create_tracers(filter_tracer_names, velocity_names, filter_params)
@@ -35,7 +37,7 @@ tracers = create_tracers(filter_tracer_names, velocity_names, filter_params)
 forcing = create_forcing(tracers, saved_tracers, filter_tracer_names, velocity_names, filter_params)
 
 # Define model 
-model = LagrangianFilter(;grid, tracers= tracers, forcing=forcing)
+model = LagrangianFilter(;grid, tracers = tracers, forcing = forcing)
 
 # Define some outputs
 u = model.velocities.u
@@ -50,7 +52,7 @@ simulation.callbacks[:update_velocities] = Callback(update_velocities!, paramete
 
 
 function progress(sim)
-    @info @sprintf("Simulation time: %s, max(|u|, |v|), max(|g_total|), min(|g_total|): %.2e, %.2e, %.2e, %.2e \n", 
+    @info @sprintf("Simulation time: %s, max(|u|, |v|), min(|u|, |v|): %.2e, %.2e, %.2e, %.2e \n", 
                    prettytime(sim.model.clock.time), 
                    maximum(abs, u), maximum(abs, v),minimum(abs, u),minimum(abs, v))             
      return nothing
@@ -66,12 +68,8 @@ simulation.output_writers[:fields] = NetCDFOutputWriter(model, filtered_outputs,
                                                         overwrite_existing = true)
 
 
-# And finally run the simulation.
-start = time()
+# And run the simulation.
 run!(simulation)
-computation_time = time() - start
-println("Computation time: ", computation_time, " seconds")
-
 
 # Now, run it backwards. Switch the data direction on disk
 set_data_on_disk!(fields_filename, direction="backward", T_start=T_start, T_end = T_end);
@@ -86,9 +84,5 @@ simulation.output_writers[:fields] = NetCDFOutputWriter(model, filtered_outputs,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)
 
-# And finally run the simulation.
-start = time()
+# And run the simulation.
 run!(simulation)
-computation_time = time() - start
-println("Computation time: ", computation_time, " seconds")                                                        
-

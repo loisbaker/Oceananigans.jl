@@ -48,6 +48,7 @@ OceananigansMakieExt = ["MakieCore", "Makie"]
 [compat]
 Adapt = "4.1.1"
 CUDA = "4.1.1, 5"
+CairoMakie = "0.12.18"
 Crayons = "4"
 CubedSphere = "0.2, 0.3"
 Dates = "1.9"
