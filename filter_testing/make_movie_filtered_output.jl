@@ -27,27 +27,27 @@ xC, yC = ds["xC"], ds["yC"]
 fig = Figure(size = (1200, 450))
 
 axis_kwargs = (xlabel = "x", ylabel = "y")
-ax_1  = Axis(fig[2, 1]; title = "Total vorticity, ω, forward", axis_kwargs...)
-ax_2 = Axis(fig[2, 3]; title = "Forward_filtered vorticity", axis_kwargs...)
-ax_3  = Axis(fig[2, 5]; title = "Total filtered vorticity", axis_kwargs...)
+ax_1  = Axis(fig[2, 1]; title = "Total vorticity, ω", axis_kwargs...)
+ax_2 = Axis(fig[2, 3]; title = "Total filtered vorticity, no regridding", axis_kwargs...)
+ax_3  = Axis(fig[2, 5]; title = "Total filtered vorticity, regridded", axis_kwargs...)
 
 n = Observable(1)
 
 # f1 = @lift ds["ω_filtered"][:, :, 1, $n]
-f1 = @lift ds["ω_filtered"][:, :, $n]
+f1 = @lift ds["ω"][:, :, $n]
 hm_ω = heatmap!(ax_1, xF, yF, f1, colorrange = (-1, 1), colormap = :balance)
 Colorbar(fig[2, 2], hm_ω)
 
-f2 = @lift ds["ω_filtered_regrid"][:, :, $n]
+f2 = @lift ds["ω_filtered"][:, :, $n]
 # f2 = @lift ds["ω_filtered_regrid"][:, :, 1, $n]
 
 hm_c = heatmap!(ax_2, xC, yC, f2, colorrange = (-1, 1), colormap = :balance)
 Colorbar(fig[2, 4], hm_c)
 
 # f3 = @lift ds["u_filtered_regrid"][:, :, 1, $n]
-f3 = @lift ds["u_filtered_regrid"][:, :, $n]
+f3 = @lift ds["ω_filtered_regrid"][:, :, $n]
 
-hm_ω = heatmap!(ax_3, xF, yF, f3, colorrange = (-0.3, 0.3), colormap = :balance)
+hm_ω = heatmap!(ax_3, xF, yF, f3, colorrange = (-1, 1), colormap = :balance)
 Colorbar(fig[2, 6], hm_ω)
 
 # g2 = @lift ds2["g_total"][:, :, 1, $n]
@@ -64,7 +64,7 @@ fig
 # Finally, we record a movie.
 
 frames = 1:length(times)
-movie_filename = joinpath(@__DIR__,  "check_output.mp4")
+movie_filename = joinpath(@__DIR__,  "filtered_output.mp4")
 record(fig, movie_filename, frames, framerate=5) do i
     n[] = i
 end

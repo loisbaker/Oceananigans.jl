@@ -19,7 +19,7 @@ freq_c = 2
 T = set_data_on_disk!(fields_filename, direction="forward", T_start = T_start, T_end = T_end)
 
 # Define tracers to filter
-filter_tracer_names = ("ω","u")
+filter_tracer_names = ("ω",)
 
 # Define velocities to use for filtering
 velocity_names = ("u","v")
@@ -39,10 +39,9 @@ forcing = create_forcing(tracers, saved_tracers, filter_tracer_names, velocity_n
 # Define model 
 model = LagrangianFilter(;grid, tracers = tracers, forcing = forcing)
 
-# Define some outputs
+# Define our outputs
 u = model.velocities.u
 v = model.velocities.v
-ω = Field(@at (Center,Center,Center) ∂x(v) - ∂y(u))
 filtered_outputs = create_output_fields(model, filter_tracer_names, velocity_names, filter_params)
 
 # Define the filtering simulation 
@@ -54,7 +53,7 @@ simulation.callbacks[:update_velocities] = Callback(update_velocities!, paramete
 function progress(sim)
     @info @sprintf("Simulation time: %s, max(|u|, |v|), min(|u|, |v|): %.2e, %.2e, %.2e, %.2e \n", 
                    prettytime(sim.model.clock.time), 
-                   maximum(abs, u), maximum(abs, v),minimum(abs, u),minimum(abs, v))             
+                   maximum(abs, u), maximum(abs, v), minimum(abs, u),minimum(abs, v))             
      return nothing
  end
 

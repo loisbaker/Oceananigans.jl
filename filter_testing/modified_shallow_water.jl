@@ -11,7 +11,7 @@ using Printf
 # The shallow water model is two-dimensional and uses grids that are `Flat`
 # in the vertical direction. 
 arch = GPU()
-grid = RectilinearGrid(arch,size = (256, 256),
+grid = RectilinearGrid(arch, size = (256, 256),
                        x = (0, 2π),
                        y = (0, 2π),
                        topology = (Periodic, Periodic, Flat))

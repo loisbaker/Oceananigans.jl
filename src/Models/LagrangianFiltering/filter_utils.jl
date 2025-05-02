@@ -88,7 +88,7 @@ function set_data_on_disk!(fields_filename; direction = "backward", T_start = no
                     backward_iterations = reverse(keys(file["timeseries/$var"])[2:end]) # don't include serialized
                 end
                 # for velocities, we reverse all entries and negate them
-                if (var == "u") || (var == "v")
+                if (var == "u") || (var == "v") || (var == "w")
                     for iter in backward_iterations 
                         data = file["timeseries/$var/$iter"] # Load in data
                         Base.delete!(file, "timeseries/$var/$iter") # Delete the entry
@@ -338,6 +338,15 @@ function create_output_fields(model, filter_tracer_names, velocity_names, filter
     return outputs_dict
 end
 
+# function update_velocities!(sim, fts_velocities)
+#     model = sim.model
+#     time = sim.model.clock.time
+#     u_fts, v_fts = fts_velocities
+#     set!(model, u=u_fts[Time(time)], v= v_fts[Time(time)])
+#     return nothing
+# end
+
+#TODO make sure update velocities works for any combo of u,v,w 
 function update_velocities!(sim, fts_velocities)
     model = sim.model
     time = sim.model.clock.time
