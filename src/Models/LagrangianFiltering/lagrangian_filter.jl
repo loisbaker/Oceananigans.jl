@@ -5,17 +5,16 @@ using Oceananigans.Architectures: AbstractArchitecture
 using Oceananigans.DistributedComputations: Distributed
 using Oceananigans.Advection: Centered, adapt_advection_order
 using Oceananigans.BoundaryConditions: regularize_field_boundary_conditions
-using Oceananigans.Fields: Field, tracernames, VelocityFields, TracerFields, CenterField
+using Oceananigans.Fields: BackgroundFields, Field, tracernames, VelocityFields, TracerFields, CenterField
 using Oceananigans.Forcings: model_forcing
 using Oceananigans.Grids: inflate_halo_size, with_halo, architecture
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid
 using Oceananigans.Models: AbstractModel, NaNChecker, extract_boundary_conditions
 using Oceananigans.TimeSteppers: Clock, TimeStepper, update_state!, AbstractLagrangianParticles
-using Oceananigans.TurbulenceClosures: validate_closure, with_tracers, DiffusivityFields, time_discretization, implicit_diffusion_solver
+using Oceananigans.TurbulenceClosures: validate_closure, with_tracers, build_diffusivity_fields, time_discretization, implicit_diffusion_solver
 using Oceananigans.TurbulenceClosures.TKEBasedVerticalDiffusivities: FlavorOfCATKE
 using Oceananigans.Utils: tupleit
 using Oceananigans.Grids: topology
-
 import Oceananigans.Architectures: architecture
 import Oceananigans.Models: total_velocities, default_nan_checker, timestepper
 
@@ -23,9 +22,7 @@ const ParticlesOrNothing = Union{Nothing, AbstractLagrangianParticles}
 
 
 mutable struct LagrangianFilter{TS, E, A<:AbstractArchitecture, G, T, U, C, F,
-                                   V, K, P, AF} <: AbstractModel{TS}
-# mutable struct LagrangianFilter{TS, E, A<:AbstractArchitecture, G, T, U, C, F,
-#                                     V, K, P, AF} <: AbstractModel{TS}
+                                   V, K, P, AF} <: AbstractModel{TS, A}
 
          architecture :: A        # Computer `Architecture` on which `Model` is run
                  grid :: G        # Grid of physical points on which `Model` is solved
