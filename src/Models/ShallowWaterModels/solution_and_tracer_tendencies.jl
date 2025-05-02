@@ -5,8 +5,8 @@ using Oceananigans.Operators
 using Oceananigans.TurbulenceClosures: ∇_dot_qᶜ, ∂ⱼ_τ₁ⱼ, ∂ⱼ_τ₂ⱼ
 
 # Add for modified shallow water
-@inline half_g_h²(i, j, k, grid, h, g)  = @inbounds 1/2 * g * h[i, j, k]^2 # original
-#@inline half_g_h²(i, j, k, grid, h, g)  = @inbounds -1/2 * g * h[i, j, k]^(-2) # MSW
+#@inline half_g_h²(i, j, k, grid, h, g)  = @inbounds 1/2 * g * h[i, j, k]^2 # original
+@inline half_g_h²(i, j, k, grid, h, g)  = @inbounds -1/2 * g * h[i, j, k]^(-2) # MSW
 @inline h_plus_hB(i, j, k, grid, h, hB) = @inbounds h[i, j, k] + hB[i, j, k]
 
 @inline x_pressure_gradient(i, j, k, grid, g, h, hB, formulation) = ∂xᶠᶜᶜ(i, j, k, grid, half_g_h², h, g)

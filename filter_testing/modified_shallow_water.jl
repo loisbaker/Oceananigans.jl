@@ -5,6 +5,7 @@ using Oceananigans
 using Oceananigans.Models: ShallowWaterModel
 using MAT
 using Printf
+using NCDatasets
 
 # ## Two-dimensional domain 
 
@@ -78,12 +79,12 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(100))
 fields_filename= joinpath(@__DIR__, "SW_vort")
 
 # We'll output both jld2 and netcdf datasets
-simulation.output_writers[:fields_jld2] = JLD2OutputWriter(model, (; ω,u,v),
+simulation.output_writers[:fields_jld2] = JLD2Writer(model, (; ω,u,v),
                                                         filename = fields_filename,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)
 
-simulation.output_writers[:fields_nc] = NetCDFOutputWriter(model, (; ω,u,v ),
+simulation.output_writers[:fields_nc] = NetCDFWriter(model, (; ω,u,v ),
                                                         filename = fields_filename,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)

@@ -3,6 +3,7 @@ using Oceananigans.Models: LagrangianFilter
 using Oceananigans.Models.LagrangianFiltering
 using Oceananigans.Units: Time
 using Printf
+using NCDatasets
 
 fields_filename = joinpath(@__DIR__, "SW_vort.jld2")
 T_start = 0
@@ -61,7 +62,7 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(50))
 
 
 output_filename = joinpath(@__DIR__, "forward_LF.nc")
-simulation.output_writers[:fields] = NetCDFOutputWriter(model, filtered_outputs,
+simulation.output_writers[:fields] = NetCDFWriter(model, filtered_outputs,
                                                         filename = output_filename,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)
@@ -78,7 +79,7 @@ simulation.model.clock.time = 0
 
 output_filename = joinpath(@__DIR__, "backward_LF.nc")
 
-simulation.output_writers[:fields] = NetCDFOutputWriter(model, filtered_outputs,
+simulation.output_writers[:fields] = NetCDFWriter(model, filtered_outputs,
                                                         filename = output_filename,
                                                         schedule = TimeInterval(0.1),
                                                         overwrite_existing = true)
