@@ -13,7 +13,7 @@ using Oceananigans.Grids: topology, halo_size, xspacings, yspacings, zspacings, 
                           parent_index_range, ξnodes, ηnodes, rnodes, validate_index, peripheral_node
 using Oceananigans.Fields: reduced_dimensions, reduced_location, location
 using Oceananigans.AbstractOperations: KernelFunctionOperation
-using Oceananigans.Models: ShallowWaterModel, LagrangianParticles
+using Oceananigans.Models: ShallowWaterModel, LagrangianParticles, LagrangianFilter
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryGrid, GridFittedBottom, GFBIBG, GridFittedBoundary
 using Oceananigans.TimeSteppers: float_or_date_time
 using Oceananigans.BuoyancyFormulations: BuoyancyForce, BuoyancyTracer, SeawaterBuoyancy, LinearEquationOfState
@@ -608,7 +608,8 @@ default_tracer_attributes(::BuoyancyBoussinesqEOSModel) = Dict("T" => Dict("long
 
 function default_output_attributes(model)
     velocity_attrs = default_velocity_attributes(model.grid)
-    buoyancy = model isa ShallowWaterModel ? nothing : model.buoyancy
+    #buoyancy = model isa ShallowWaterModel ? nothing : model.buoyancy
+    buoyancy = (model isa ShallowWaterModel || model isa LagrangianFilter) ? nothing : model.buoyancy
     tracer_attrs = default_tracer_attributes(buoyancy)
     return merge(velocity_attrs, tracer_attrs)
 end
