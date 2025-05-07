@@ -118,12 +118,12 @@ function set_data_on_disk!(fields_filename; direction = "backward", T_start = no
 
                         if isnothing(T_start) # If we're not given a starting time, set it to simulation start time 
                             T_start = t_simulation[Nt]
-                            println("G new T_start is $T_start")
+                            println("New T_start is $T_start")
                         end
         
                         if isnothing(T_end) 
                             T_end = t_simulation[1] # If we're not given a end time, set it to simulation end time 
-                            println("H new T_end is $T_end")
+                            println("New T_end is $T_end")
                         end
 
                         for (i, iter) in enumerate(backward_iterations)

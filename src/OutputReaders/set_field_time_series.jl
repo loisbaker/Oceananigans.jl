@@ -21,11 +21,10 @@ function set!(fts::InMemoryFTS, path::String=fts.path, name::String=fts.name; wa
     # TODO: a potential optimization here might be to load
     # all of the data into a single array, and then transfer that
     # to parent(fts).
-    for n in time_indices(fts)
+    for n in time_indices(fts) #Different from file_index because of partly in memory things?
         t = fts.times[n]
         file_index = find_time_index(t, file_times)
-
-        if isnothing(file_index) # the time does not exist in the file
+        if isnothing(file_index) # the time does not exist in the file. Accounts for the possiblity that fts.times is not the same as what's on file
             if warn_missing_data
                 msg = @sprintf("No data found for time %.1e and time index %d\n", t, n)
                 msg *= @sprintf("for field %s at path %s", path, name)
