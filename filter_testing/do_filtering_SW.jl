@@ -7,7 +7,7 @@ using NCDatasets
 
 fields_filename = joinpath(@__DIR__, "SW_vort.jld2")
 T_start = 0
-T_end = 1
+T_end = 10
 
 arch = GPU()
 

@@ -28,6 +28,7 @@ Project with Michael Nguyen and Ted Johnson.
 using Oceananigans
 using Oceananigans.Models: ShallowWaterModel
 using Oceananigans.Models.ShallowWaterModels: ShallowWaterScalarDiffusivity
+using NCDatasets
 
 # Set some physical and numerical parameters:
 
@@ -39,7 +40,7 @@ H₀, L = 0.1, 0.6                      # height and width of initial perburbati
 δ = 0.01                              # smoothing lengthscale
 parameters = ()                       # additional parameters for forcing
 T = 100 / f                           # simulation stop time
-saves = 100                           # number of saves
+saves = 400                           # number of saves
 
 # Define the bottom topography:
 
@@ -116,13 +117,19 @@ callback(sim) = @info "Iteration: $(sim.model.clock.iteration), " *
 
 simulation.callbacks[:disp_time] = Callback(callback, IterationInterval(100))
 
-fields_filename = joinpath(@__DIR__, "shallow_water.nc")
-simulation.output_writers[:fields] = NetCDFOutputWriter(model,
+fields_filename_nc = joinpath(@__DIR__, "shallow_water.nc")
+fields_filename_jld2 = joinpath(@__DIR__, "shallow_water.jld2")
+simulation.output_writers[:fields] = NetCDFWriter(model,
                                                         (; ω, u, v, h, B),
-                                                        filename = fields_filename,
+                                                        filename = fields_filename_nc,
                                                         schedule = TimeInterval(T/saves),
                                                         overwrite_existing = true)
 
+
+simulation.output_writers[:fields_jld2] = JLD2Writer(model, (; ω,u,v,h),
+                                                        filename = fields_filename_jld2,
+                                                        schedule = TimeInterval(T/saves),
+                                                        overwrite_existing = true)                                                        
 # Run simulation:
 
 run!(simulation)

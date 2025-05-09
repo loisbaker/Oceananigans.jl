@@ -249,11 +249,13 @@ mutable struct FieldTimeSeries{LX, LY, LZ, TI, K, I, D, G, ET, B, χ, P, N, KW} 
         if times isa AbstractArray
             # Try to convert to a range, cuz
             time_range = range(first(times), last(times), length=length(times))
-            if all(time_range .≈ times) # good enough for most
-                times = time_range
-            end
-
+            # if all(time_range .≈ times) # good enough for most
+            #     times = time_range
+            # end
+            @show(typeof(times))
+            @show(architecture(grid))
             times = on_architecture(architecture(grid), times)
+            @show(typeof(times))
         end
 
         if time_indexing isa Cyclical{Nothing} # we have to infer the period
