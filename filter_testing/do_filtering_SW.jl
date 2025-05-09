@@ -11,6 +11,9 @@ T_end = 10
 
 arch = GPU()
 
+# Set the output period
+T_out = 0.1
+
 # Set filter order and cut-off frequency
 # Amplitude of frequency response of filter will be squared Butterworth order 2^N
 N = 2 
@@ -64,7 +67,7 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(50))
 output_filename = joinpath(@__DIR__, "forward_LF.nc")
 simulation.output_writers[:fields] = NetCDFWriter(model, filtered_outputs,
                                                         filename = output_filename,
-                                                        schedule = TimeInterval(0.1),
+                                                        schedule = TimeInterval(T_out),
                                                         overwrite_existing = true)
 
 
@@ -102,7 +105,7 @@ output_filename = joinpath(@__DIR__, "backward_LF.nc")
 
 simulation.output_writers[:fields] = NetCDFWriter(model, filtered_outputs,
                                                         filename = output_filename,
-                                                        schedule = TimeInterval(0.1),
+                                                        schedule = TimeInterval(T_out),
                                                         overwrite_existing = true)
 
 # And run the simulation.
